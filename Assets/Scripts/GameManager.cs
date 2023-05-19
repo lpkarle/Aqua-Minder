@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -8,23 +9,39 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] private Material[] indicatorMaterials;
 
-    // Start is called before the first frame update
-    void Start()
+    private ArduinoCommunication ArduinoInstance;
+
+    async void Start()
     {
         colorCycle.GetComponent<Renderer>().material = indicatorMaterials[1];
 
-        ArduinoCommunication.GetInstance().Recive(AquaMinderSensor.HUMIDITY);
+        await InitializeArduinoCommunication();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
     }
 
-    void OnDestroy() 
+    async void OnDestroy() 
     {
-        ArduinoCommunication.GetInstance().CloseArduinoCommunication();
+        await CloseArduinoCommunication();
+    }
+
+    private async Task InitializeArduinoCommunication()
+    {
+        ArduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance());
+    }
+
+    private async Task ReceiveArduinoCommunication()
+    {
+        if (ArduinoInstance != null)
+            await Task.Run(() => ArduinoInstance.Recive(AquaMinderSensor.HUMIDITY));
+    }
+
+    private async Task CloseArduinoCommunication()
+    {
+        if (ArduinoInstance != null)
+            await Task.Run(() => ArduinoInstance.CloseArduinoCommunication());
     }
 
     public enum AquaMinderState
