@@ -1,40 +1,46 @@
 using System;
+using System.IO;
 using System.IO.Ports;
 using UnityEngine;
 
 
 public class ArduinoCommunication
 {
-    private static ArduinoCommunication Instance;
+    private static ArduinoCommunication Instance { get; }
 
-    private SerialPort SerialPort;
-    private string Port = "/dev/cu.usbmodem21301";
-    private int Baudrate = 115200;
+    private SerialPort serialPort;
+    private readonly string port = "/dev/cu.usbmodem21301";
+    private readonly int baudrate = 115200;
 
     public ArduinoCommunication()
     {
-        EstablishArduinoConnection();
+        EstablishArduinoConnectionAndWaitForInitialization();
     }
 
-    // Public static method to get the singleton instance
     public static ArduinoCommunication GetInstance()
     {
-        return Instance == null ? new ArduinoCommunication() : Instance;
+        return Instance ?? new ArduinoCommunication();
     }
 
-    private void EstablishArduinoConnection()
+    private void EstablishArduinoConnectionAndWaitForInitialization()
     {
-        Debug.Log($"Establish serial connection with Arduino on {Port} with baudrate {115200}");
-
-        SerialPort = new SerialPort(Port, Baudrate);
-        SerialPort.Open();
-
-        // Wait for Arduino to initialize
-        string response = "";
-        while (!response.Contains("Ready"))
+        try
         {
-            response = SerialPort.ReadLine().Trim();
-            Debug.Log(response);
+            Debug.Log($"Try to establish serial connection with Arduino on {port} with baudrate {baudrate}");
+            
+            serialPort = new SerialPort(port, baudrate);
+            serialPort.Open();
+
+            string response = "";
+            while (!response.Contains("Ready"))
+            {
+                response = serialPort.ReadLine().Trim();
+                Debug.Log(response);
+            }
+        }
+        catch (IOException e)
+        {
+            Debug.LogError("Can not open a serial connection with the given connection data.\n" + e);
         }
     }
 
@@ -48,8 +54,8 @@ public class ArduinoCommunication
     {
         Debug.Log("Close Arduino Communication");
 
-        if (SerialPort != null && SerialPort.IsOpen)
-            SerialPort.Close();
+        if (serialPort != null && serialPort.IsOpen)
+            serialPort.Close();
     }
 }
 
