@@ -87,6 +87,9 @@ public class ArduinoCommunication
         serialPort.Write(((int)sensor).ToString());
 
         var response = serialPort.ReadLine().Trim();
+
+        // Debug.Log(response);
+
         var responseJson = JsonUtility.FromJson<ArduinoJsonData>(response);
 
         return sensor switch
