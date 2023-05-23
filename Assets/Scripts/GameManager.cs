@@ -70,10 +70,22 @@ public class GameManager : MonoBehaviour
         arduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance());
     }
 
-    private async Task ReceiveArduinoCommunication()
+    private async Task ReceiveArduinoUser()
     {
         if (arduinoInstance != null)
-            await Task.Run(() => arduinoInstance.Recive(AquaMinderSensor.HUMIDITY));
+            await Task.Run(() => arduinoInstance.ReceiveUser());
+    }
+
+    private async Task ReceiveArduinoTemperatureAndHumidity()
+    {
+        if (arduinoInstance != null)
+            await Task.Run(() => arduinoInstance.ReceiveTemperatureAndHumidity());
+    }
+
+    private async Task ReceiveArduinoWeight()
+    {
+        if (arduinoInstance != null)
+            await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
     }
 
     private async Task CloseArduinoCommunication()
