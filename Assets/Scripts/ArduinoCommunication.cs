@@ -8,17 +8,20 @@ public class ArduinoCommunication
     private static ArduinoCommunication Instance { get; }
 
     private SerialPort serialPort;
-    private readonly string port = "/dev/cu.usbmodem21301";
-    private readonly int baudrate = 115200;
+    private readonly string port;
+    private readonly int baudrate;
 
-    public ArduinoCommunication()
+    public ArduinoCommunication(string port, int baudrate)
     {
-        EstablishArduinoConnectionAndWaitForInitialization();
+        this.port = port;
+        this.baudrate = baudrate;
+
+        EstablishArduinoConnection();
     }
 
-    public static ArduinoCommunication GetInstance()
+    public static ArduinoCommunication GetInstance(string port, int baudrate)
     {
-        return Instance ?? new ArduinoCommunication();
+        return Instance ?? new ArduinoCommunication(port, baudrate);
     }
 
     public string ReceiveUser()
@@ -55,7 +58,7 @@ public class ArduinoCommunication
             serialPort.Close();
     }
 
-    private void EstablishArduinoConnectionAndWaitForInitialization()
+    private void EstablishArduinoConnection()
     {
         try
         {
@@ -88,22 +91,9 @@ public class ArduinoCommunication
 
         var response = serialPort.ReadLine().Trim();
 
-        // Debug.Log(response);
+        Debug.Log(response);
 
-        var responseJson = JsonUtility.FromJson<ArduinoJsonData>(response);
-
-        return sensor switch
-        {
-            AquaMinderSensor.USER => responseJson.uid,
-            AquaMinderSensor.HUMIDITY => $"{responseJson.temperature};{responseJson.humidity}",
-            AquaMinderSensor.WEIGHT => responseJson.drankWeight,
-            _ => "",
-        };
-    }
-
-    private class ArduinoJsonData
-    {
-        public string uid, humidity, temperature, drankWeight;
+        return response;
     }
 }
 
