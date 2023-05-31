@@ -20,27 +20,16 @@ public class GameManager : MonoBehaviour
     private float temperature;
     private float drankWeight;
 
-    private bool arduinoRequestIsLocked = false;
+    private bool runtime = true;
 
     void Awake() => Instance = this;
 
     async void Start()
     {
         await InitializeArduinoCommunication();
+        await UpdateArduinoSensorData();
 
         UpdateAquaMinderState(AquaMinderState.ONBOARDING);
-    }
-
-    async void Update()
-    {
-        if (!arduinoRequestIsLocked)
-            await ReceiveArduinoUser();
-
-        if (!arduinoRequestIsLocked)
-            await ReceiveArduinoTemperatureAndHumidity();
-
-        if (!arduinoRequestIsLocked)
-            await ReceiveArduinoWeight();
     }
 
     void UpdateAquaMinderState(AquaMinderState newState) 
@@ -87,45 +76,49 @@ public class GameManager : MonoBehaviour
         // TODO
     }
 
+    private async Task UpdateArduinoSensorData()
+    {
+        while (runtime)
+        {
+            await UpdateArduinoUser();
+            await UpdateArduinoWeight();
+            await UpdateArduinoTemperatureAndHumidity();
+        }
+    }
+
     private async Task InitializeArduinoCommunication()
     {
         arduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance(arduinoPort, arduinoBaudrate));
     }
 
-    private async Task ReceiveArduinoUser()
+    private async Task UpdateArduinoUser()
     {
-        arduinoRequestIsLocked = true;
+        if (arduinoInstance == null)
+            return;
 
-        if (arduinoInstance != null)
-            await Task.Run(() => arduinoInstance.ReceiveUser());
+        var userId = await Task.Run(() => arduinoInstance.ReceiveUser());
+        user = PlayerPrefsManager.GetUserByUid(userId);
 
-        await Delay(2000);
-
-        arduinoRequestIsLocked = false;
+        if (user != null)
+            UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
     }
 
-    private async Task ReceiveArduinoTemperatureAndHumidity()
+    private async Task UpdateArduinoWeight()
     {
-        arduinoRequestIsLocked = true;
+        if (arduinoInstance == null)
+            return;
 
-        if (arduinoInstance != null)
-            await Task.Run(() => arduinoInstance.ReceiveTemperatureAndHumidity());
-
-        await Delay(2000);
-
-        arduinoRequestIsLocked = false;
+        drankWeight = await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
     }
 
-    private async Task ReceiveArduinoWeight()
+    private async Task UpdateArduinoTemperatureAndHumidity()
     {
-        arduinoRequestIsLocked = true;
+        if (arduinoInstance == null)
+            return;
 
-        if (arduinoInstance != null)
-            drankWeight = await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
-
-        await Delay(2000);
-
-        arduinoRequestIsLocked = false;
+        var tmpHum = await Task.Run(() => arduinoInstance.ReceiveTemperatureAndHumidity());
+        temperature = tmpHum[0];
+        humidity = tmpHum[1];
     }
 
     private async Task CloseArduinoCommunication()
@@ -133,8 +126,6 @@ public class GameManager : MonoBehaviour
         if (arduinoInstance != null)
             await Task.Run(() => arduinoInstance.CloseArduinoCommunication());
     }
-
-    private async Task Delay(int ms) => await Task.Delay(ms);
 }
 
 public enum AquaMinderState

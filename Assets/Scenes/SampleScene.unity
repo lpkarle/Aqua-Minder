@@ -810,7 +810,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d2b79a7ab024ca290dc3797715cbfd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arduinoPort: /dev/cu.usbmodem21101
+  arduinoPort: /dev/cu.usbmodem21201
   arduinoBaudrate: 115200
 --- !u!4 &1421579627
 Transform:
