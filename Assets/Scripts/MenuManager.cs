@@ -2,18 +2,26 @@ using UnityEngine;
 
 public class MenuManager : MonoBehaviour
 {
+    public static MenuManager Instance;
+
     [SerializeField]
-    private GameObject panelOnboarding;
+    private GameObject panelOnboarding, panelMessage;
 
-    private void Awake() => GameManager.OnAquaMinderStateChanged += GameManagerOnAquaMinderStateChanged;
-
-    void Start()
+    private void Awake()
     {
-        
+        Instance = this;
+
+        GameManager.OnAquaMinderStateChanged += GameManagerOnAquaMinderStateChanged;
+    }
+
+    void OnDestroy()
+    {
+        GameManager.OnAquaMinderStateChanged -= GameManagerOnAquaMinderStateChanged;
     }
 
     private void GameManagerOnAquaMinderStateChanged(AquaMinderState state)
     {
-        // TODO panelOnboarding.SetActive(state == AquaMinderState.ONBOARDING);
+        panelOnboarding.SetActive(state == AquaMinderState.ONBOARDING);
+        panelMessage.SetActive(state == AquaMinderState.BOTTLE_ON);
     }
 }

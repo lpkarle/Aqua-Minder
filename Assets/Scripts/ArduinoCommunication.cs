@@ -26,14 +26,14 @@ public class ArduinoCommunication
 
     public string ReceiveUser()
     {
-        Debug.Log("Arduino User Request");
+        // Debug.Log("Arduino User Request");
 
         return Recive(AquaMinderSensor.USER);
     }
 
     public float[] ReceiveTemperatureAndHumidity()
     {
-        Debug.Log("Arduino Humidity Request");
+        // Debug.Log("Arduino Humidity Request");
 
         string[] temperatureHumidity = Recive(AquaMinderSensor.HUMIDITY).Split(';');
 
@@ -45,7 +45,7 @@ public class ArduinoCommunication
 
     public float ReceiveDrankWeight()
     {
-        Debug.Log("Arduino Weight Request");
+        // Debug.Log("Arduino Weight Request");
 
         return float.Parse(Recive(AquaMinderSensor.WEIGHT));
     }
@@ -71,8 +71,9 @@ public class ArduinoCommunication
             while (!response.Contains("Ready"))
             {
                 response = serialPort.ReadLine().Trim();
-                Debug.Log(response);
             }
+
+            Debug.Log(response);
         }
         catch (IOException e)
         {
@@ -82,7 +83,7 @@ public class ArduinoCommunication
 
     private string Recive(AquaMinderSensor sensor)
     {
-        Debug.Log($"Arduino Receive {sensor} Sensor.");
+        // Debug.Log($"Arduino Receive {sensor} Sensor.");
 
         if (serialPort == null)
             return "";
@@ -91,7 +92,7 @@ public class ArduinoCommunication
 
         var response = serialPort.ReadLine().Trim();
 
-        Debug.Log(response);
+        // Debug.Log(response);
 
         return response;
     }

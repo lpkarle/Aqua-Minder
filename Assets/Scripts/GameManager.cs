@@ -26,10 +26,10 @@ public class GameManager : MonoBehaviour
 
     async void Start()
     {
+        UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+
         await InitializeArduinoCommunication();
         await UpdateArduinoSensorData();
-
-        UpdateAquaMinderState(AquaMinderState.ONBOARDING);
     }
 
     void UpdateAquaMinderState(AquaMinderState newState) 
