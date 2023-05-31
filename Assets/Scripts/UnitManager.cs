@@ -17,8 +17,19 @@ public class UnitManager : MonoBehaviour
         colorIndicatorCycle.GetComponent<Renderer>().material = indicatorMaterials[1];
     }
 
+
+    void Update()
+    {
+            
+    }
+
     public void UpdateColorIndicator()
     {
         // TODO
+    }
+
+    private void ScaleColorIndicatorUpAndDown()
+    {
+
     }
 }

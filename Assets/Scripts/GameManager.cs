@@ -32,6 +32,14 @@ public class GameManager : MonoBehaviour
         await UpdateArduinoSensorData();
     }
 
+    private void Update()
+    {
+        if (user != null)
+            UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
+
+        MenuManager.Instance.UpdateSystemInfoText(user, temperature, humidity, drankWeight);
+    }
+
     void UpdateAquaMinderState(AquaMinderState newState) 
     {
         State = newState;
@@ -68,7 +76,7 @@ public class GameManager : MonoBehaviour
 
     private void HandleBottleOn()
     {
-        // TODO
+        MenuManager.Instance.ShowWelcomeMessage(user.name);
     }
 
     private void HandleBottleOff()
@@ -98,9 +106,6 @@ public class GameManager : MonoBehaviour
 
         var userId = await Task.Run(() => arduinoInstance.ReceiveUser());
         user = PlayerPrefsManager.GetUserByUid(userId);
-
-        if (user != null)
-            UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
     }
 
     private async Task UpdateArduinoWeight()
