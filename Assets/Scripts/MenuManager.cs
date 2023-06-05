@@ -5,8 +5,9 @@ public class MenuManager : MonoBehaviour
 {
     public static MenuManager Instance;
 
-    [SerializeField]
-    private GameObject panelOnboarding, panelMessage;
+    [SerializeField] private GameObject panelOnboarding, panelMessage;
+
+    [SerializeField] private Transform locationSpeechbubble;
 
     // Only for development
     [SerializeField] private TextMeshProUGUI textSystemInfo;
@@ -23,6 +24,9 @@ public class MenuManager : MonoBehaviour
     void Start()
     {
         textWelcome = panelMessage.GetComponentInChildren<TextMeshProUGUI>();
+
+        panelOnboarding.transform.position = locationSpeechbubble.position;
+        panelMessage.transform.position = locationSpeechbubble.position;
     }
 
     void OnDestroy()
