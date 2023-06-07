@@ -15,7 +15,8 @@ public class GameManager : MonoBehaviour
 
     private ArduinoCommunication arduinoInstance;
 
-    private User user;
+    public User CurrentUser { get; private set; }
+    private User previousUser;
     private float humidity;
     private float temperature;
     private float drankWeight;
@@ -34,10 +35,10 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        if (user != null)
-            UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
+        
 
-        MenuManager.Instance.UpdateSystemInfoText(user, temperature, humidity, drankWeight);
+        // Only for development
+        MenuManager.Instance.UpdateSystemInfoText(CurrentUser, temperature, humidity, drankWeight);
     }
 
     void UpdateAquaMinderState(AquaMinderState newState) 
@@ -48,6 +49,10 @@ public class GameManager : MonoBehaviour
         {
             case AquaMinderState.ONBOARDING:
                 HandleOnboarding();
+                break;
+
+            case AquaMinderState.USER_LOGIN:
+                HandleUserLogin();
                 break;
 
             case AquaMinderState.BOTTLE_ON:
@@ -66,22 +71,43 @@ public class GameManager : MonoBehaviour
 
     async void OnDestroy()
     {
+        runtime = false;
         await CloseArduinoCommunication();
     }
 
     private void HandleOnboarding()
     {
-        // TODO
+        Debug.Log("Handle ONBOARDING");
+    }
+
+    async private void HandleUserLogin()
+    {
+        Debug.Log("Handle USER_LOGIN");
+        await Task.Delay(5000);
+
+        UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
     }
 
     private void HandleBottleOn()
     {
-        MenuManager.Instance.ShowWelcomeMessage(user.name);
+        Debug.Log("Handle BOTTLE_ON");
+
+        previousUser = CurrentUser;
     }
 
-    private void HandleBottleOff()
+    async private void HandleBottleOff()
     {
-        // TODO
+        Debug.Log("Handle BOTTLE_OFF");
+
+        await Task.Delay(5000);
+
+        if (CurrentUser == null)
+            UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+    }
+
+    private async Task InitializeArduinoCommunication()
+    {
+        arduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance(arduinoPort, arduinoBaudrate));
     }
 
     private async Task UpdateArduinoSensorData()
@@ -94,18 +120,15 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private async Task InitializeArduinoCommunication()
-    {
-        arduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance(arduinoPort, arduinoBaudrate));
-    }
-
     private async Task UpdateArduinoUser()
     {
         if (arduinoInstance == null)
             return;
 
         var userId = await Task.Run(() => arduinoInstance.ReceiveUser());
-        user = PlayerPrefsManager.GetUserByUid(userId);
+        CurrentUser = PlayerPrefsManager.GetUserByUid(userId);
+
+        CheckAquaMinderUserChange();
     }
 
     private async Task UpdateArduinoWeight()
@@ -131,11 +154,51 @@ public class GameManager : MonoBehaviour
         if (arduinoInstance != null)
             await Task.Run(() => arduinoInstance.CloseArduinoCommunication());
     }
+
+    private void CheckAquaMinderUserChange()
+    {
+        
+
+        if (CurrentUser == null)
+        {
+            Debug.Log("Current User IS Null");
+
+            if (State == AquaMinderState.BOTTLE_ON)
+            {
+                UpdateAquaMinderState(AquaMinderState.BOTTLE_OFF);
+                return;
+            }
+        }
+        else
+        {
+            Debug.Log("Current User IS_NOT Null");
+
+            if (State == AquaMinderState.ONBOARDING)
+            {
+                UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
+                return;
+            }
+
+            if (State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid == previousUser.uid)
+            {
+                UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
+                return;
+            }
+
+            if (State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid != previousUser.uid)
+            {
+                UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
+                return;
+            }
+
+        }
+    }
 }
 
 public enum AquaMinderState
 {
     ONBOARDING,
+    USER_LOGIN,
     BOTTLE_ON,
     BOTTLE_OFF
 }

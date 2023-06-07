@@ -34,12 +34,7 @@ public class MenuManager : MonoBehaviour
         GameManager.OnAquaMinderStateChanged -= GameManagerOnAquaMinderStateChanged;
     }
 
-    public void ShowWelcomeMessage(string userName)
-    {
-        textWelcome.text = $"Willkommen {userName}\n\nfrohes trinken :)";
-    }
-
-    // Only for development
+    // TODO Remove => Only for development
     public void UpdateSystemInfoText(User user, float temperature, float humidity, float weight)
     {
         if (user == null)
@@ -49,6 +44,8 @@ public class MenuManager : MonoBehaviour
             Temperature: {temperature} °C
             Luftfeuchtigkeit: {humidity} %
             Bereits getrunken: {weight} ml
+
+            State: {GameManager.Instance.State}
             ";
         }
         else
@@ -58,6 +55,8 @@ public class MenuManager : MonoBehaviour
             Temperature: {temperature} °C
             Luftfeuchtigkeit: {humidity} %
             Bereits getrunken: {weight} ml
+
+            State: {GameManager.Instance.State}
             ";
         }
     }
@@ -65,6 +64,18 @@ public class MenuManager : MonoBehaviour
     private void GameManagerOnAquaMinderStateChanged(AquaMinderState state)
     {
         panelOnboarding.SetActive(state == AquaMinderState.ONBOARDING);
-        panelMessage.SetActive(state == AquaMinderState.BOTTLE_ON);
+        panelMessage.SetActive(state == AquaMinderState.USER_LOGIN);
+
+        switch (state)
+        {
+            case AquaMinderState.USER_LOGIN:
+                ShowWelcomeMessage();
+                break;
+        }
+    }
+
+    private void ShowWelcomeMessage()
+    {
+        textWelcome.text = $"Willkommen { GameManager.Instance.CurrentUser.name }\n\nfrohes trinken :)";
     }
 }
