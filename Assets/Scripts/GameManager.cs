@@ -19,7 +19,8 @@ public class GameManager : MonoBehaviour
     private User previousUser;
     private float humidity;
     private float temperature;
-    private float drankWeight;
+    private float weightArduino;
+    private float weightBottleOn;
 
     private bool runtime = true;
 
@@ -27,6 +28,19 @@ public class GameManager : MonoBehaviour
 
     async void Start()
     {
+
+        //Debug.Log("Get User");
+
+        //CurrentUser = PlayerPrefsManager.GetUserByUid("ab8a90b9");
+        //Debug.Log("CurrentUser: " + CurrentUser.name);
+
+        //CurrentUser.drankWeight = 104;
+        //PlayerPrefsManager.SetUser(CurrentUser);
+
+        //var test = PlayerPrefsManager.GetUserByUid("ab8a90b9");
+        //Debug.Log("CurrentUser: " + test.name +  " " + test.drankWeight);
+
+
         UpdateAquaMinderState(AquaMinderState.ONBOARDING);
 
         await InitializeArduinoCommunication();
@@ -38,7 +52,7 @@ public class GameManager : MonoBehaviour
         
 
         // Only for development
-        MenuManager.Instance.UpdateSystemInfoText(CurrentUser, temperature, humidity, drankWeight);
+        MenuManager.Instance.UpdateSystemInfoText(CurrentUser, temperature, humidity, weightArduino);
     }
 
     void UpdateAquaMinderState(AquaMinderState newState) 
@@ -88,11 +102,27 @@ public class GameManager : MonoBehaviour
         UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
     }
 
-    private void HandleBottleOn()
+    async private void HandleBottleOn()
     {
         Debug.Log("Handle BOTTLE_ON");
 
+
+        await Task.Delay(2000);
+
+        if (previousUser != null && CurrentUser != null)
+        {
+            if (previousUser.name == CurrentUser.name)
+            {
+                Debug.Log("Previous == Current");
+
+                CurrentUser.drankWeight = weightBottleOn - weightArduino;
+                PlayerPrefsManager.SetUser(CurrentUser);
+            }
+        }
+
         previousUser = CurrentUser;
+
+        weightBottleOn = weightArduino;
     }
 
     async private void HandleBottleOff()
@@ -136,7 +166,7 @@ public class GameManager : MonoBehaviour
         if (arduinoInstance == null)
             return;
 
-        drankWeight = await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
+        weightArduino = await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
     }
 
     private async Task UpdateArduinoTemperatureAndHumidity()
@@ -157,8 +187,6 @@ public class GameManager : MonoBehaviour
 
     private void CheckAquaMinderUserChange()
     {
-        
-
         if (CurrentUser == null)
         {
             Debug.Log("Current User IS Null");

@@ -43,7 +43,8 @@ public class MenuManager : MonoBehaviour
             User: null
             Temperature: {temperature} °C
             Luftfeuchtigkeit: {humidity} %
-            Bereits getrunken: {weight} ml
+            Arduino Gewicht: {weight} ml
+            Bereits Getrunken: 0 ml
 
             State: {GameManager.Instance.State}
             ";
@@ -54,7 +55,8 @@ public class MenuManager : MonoBehaviour
             User: {user.name}, {user.uid}, {user.drankWeight} ml
             Temperature: {temperature} °C
             Luftfeuchtigkeit: {humidity} %
-            Bereits getrunken: {weight} ml
+            Arduino Gewicht: {weight} ml
+            Bereits Getrunken: {user.drankWeight} ml
 
             State: {GameManager.Instance.State}
             ";
