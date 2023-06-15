@@ -13,7 +13,9 @@ public static class PlayerPrefsManager
 
         var dummyUsers = new User[]
         {
-            new User { name = "Chip 1", uid = "ab8a90b9" }
+            new User { name = "Chip 1", uid = "ab8a90b9" },
+            new User { name = "Fabio Chip", uid = "6a575e9" },
+            new User { name = "Fabio Card", uid = "10d57fa2" }
         };
 
         SetUserArray(dummyUsers);
