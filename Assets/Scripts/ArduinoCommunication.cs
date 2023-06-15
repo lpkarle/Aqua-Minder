@@ -23,31 +23,11 @@ public class ArduinoCommunication
     {
         return Instance ?? new ArduinoCommunication(port, baudrate);
     }
-
-    public string ReceiveUser()
+    
+    public string[] ReceiveAllData()
     {
-        // Debug.Log("Arduino User Request");
-
-        return Recive(AquaMinderSensor.USER);
-    }
-
-    public float[] ReceiveTemperatureAndHumidity()
-    {
-        // Debug.Log("Arduino Humidity Request");
-
-        string[] temperatureHumidity = Recive(AquaMinderSensor.HUMIDITY).Split(';');
-
-        var temperature = float.Parse(temperatureHumidity[0]);
-        var humidity = float.Parse(temperatureHumidity[1]);
-
-        return new float[] { temperature, humidity };
-    }
-
-    public float ReceiveDrankWeight()
-    {
-        // Debug.Log("Arduino Weight Request");
-
-        return float.Parse(Recive(AquaMinderSensor.WEIGHT));
+        // Debug.Log("Arduino All Data Request");
+        return Receive().Split("/");
     }
 
     public void CloseArduinoCommunication()
@@ -81,28 +61,16 @@ public class ArduinoCommunication
         }
     }
 
-    private string Recive(AquaMinderSensor sensor)
+    private string Receive()
     {
-        // Debug.Log($"Arduino Receive {sensor} Sensor.");
-
         if (serialPort == null)
             return "";
-
-        serialPort.Write(((int)sensor).ToString());
-
+        
         var response = serialPort.ReadLine().Trim();
 
-        // Debug.Log(response);
+        Debug.Log(response);
 
         return response;
     }
 }
-
-public enum AquaMinderSensor
-{
-    USER = 0,
-    HUMIDITY = 1,
-    WEIGHT = 2
-}
-
 

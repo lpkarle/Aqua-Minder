@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using UnityEngine;
+using System.IO.Ports;
+using System.Linq;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,7 +12,7 @@ public class GameManager : MonoBehaviour
 
     public static event Action<AquaMinderState> OnAquaMinderStateChanged;
 
-    [SerializeField] private string arduinoPort;
+    private string arduinoPort;
     [SerializeField] private int arduinoBaudrate;
 
     private ArduinoCommunication arduinoInstance;
@@ -28,7 +30,6 @@ public class GameManager : MonoBehaviour
 
     async void Start()
     {
-
         //Debug.Log("Get User");
 
         //CurrentUser = PlayerPrefsManager.GetUserByUid("ab8a90b9");
@@ -49,13 +50,11 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        
-
         // Only for development
         MenuManager.Instance.UpdateSystemInfoText(CurrentUser, temperature, humidity, weightArduino);
     }
 
-    void UpdateAquaMinderState(AquaMinderState newState) 
+    private void UpdateAquaMinderState(AquaMinderState newState)
     {
         State = newState;
 
@@ -94,7 +93,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("Handle ONBOARDING");
     }
 
-    async private void HandleUserLogin()
+    private async void HandleUserLogin()
     {
         Debug.Log("Handle USER_LOGIN");
         await Task.Delay(5000);
@@ -102,7 +101,7 @@ public class GameManager : MonoBehaviour
         UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
     }
 
-    async private void HandleBottleOn()
+    private async void HandleBottleOn()
     {
         Debug.Log("Handle BOTTLE_ON");
 
@@ -125,7 +124,7 @@ public class GameManager : MonoBehaviour
         weightBottleOn = weightArduino;
     }
 
-    async private void HandleBottleOff()
+    private async void HandleBottleOff()
     {
         Debug.Log("Handle BOTTLE_OFF");
 
@@ -137,6 +136,7 @@ public class GameManager : MonoBehaviour
 
     private async Task InitializeArduinoCommunication()
     {
+        arduinoPort = SerialPort.GetPortNames().FirstOrDefault(s => s.Contains("usbmodem"));
         arduinoInstance = await Task.Run(() => ArduinoCommunication.GetInstance(arduinoPort, arduinoBaudrate));
     }
 
@@ -144,39 +144,29 @@ public class GameManager : MonoBehaviour
     {
         while (runtime)
         {
-            await UpdateArduinoUser();
-            await UpdateArduinoWeight();
-            await UpdateArduinoTemperatureAndHumidity();
+            await UpdateAllData();
         }
     }
 
-    private async Task UpdateArduinoUser()
+    private async Task UpdateAllData()
     {
         if (arduinoInstance == null)
             return;
 
-        var userId = await Task.Run(() => arduinoInstance.ReceiveUser());
+        var allData = await Task.Run(() => arduinoInstance.ReceiveAllData());
+
+        // User Stuff
+        var userId = allData[0];
         CurrentUser = PlayerPrefsManager.GetUserByUid(userId);
-
         CheckAquaMinderUserChange();
-    }
 
-    private async Task UpdateArduinoWeight()
-    {
-        if (arduinoInstance == null)
-            return;
+        // Temperature and Humidity Stuff
+        var tmpHum = allData[1].Split(";");
+        temperature = float.Parse(tmpHum[0]);
+        humidity = float.Parse(tmpHum[1]);
 
-        weightArduino = await Task.Run(() => arduinoInstance.ReceiveDrankWeight());
-    }
-
-    private async Task UpdateArduinoTemperatureAndHumidity()
-    {
-        if (arduinoInstance == null)
-            return;
-
-        var tmpHum = await Task.Run(() => arduinoInstance.ReceiveTemperatureAndHumidity());
-        temperature = tmpHum[0];
-        humidity = tmpHum[1];
+        // Weight Stuff
+        weightArduino = float.Parse(allData[2]);
     }
 
     private async Task CloseArduinoCommunication()
