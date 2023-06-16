@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using System.IO.Ports;
@@ -25,6 +26,10 @@ public class GameManager : MonoBehaviour
     private float weightBottleOn;
 
     private bool runtime = true;
+
+    private Task task1;
+    private Task task2;
+    private Task task3;
 
     void Awake() => Instance = this;
 
@@ -87,7 +92,7 @@ public class GameManager : MonoBehaviour
         Debug.Log($"----------- New Aqua-Minder state: {newState}. ----------");
     }
 
-    async void OnDestroy()
+    private async void OnDestroy()
     {
         runtime = false;
         await CloseArduinoCommunication();
@@ -169,16 +174,19 @@ public class GameManager : MonoBehaviour
         
         // Wait before reminding user (1st stage)
         Debug.Log("Wait before reminding user");
-        await Task.Delay(10000);
-
+        await Task.Run(() => Wait1());
+        
         // Wait before logging out user (2nd stage)
         Debug.Log("Wait before logging out user");
-        await Task.Delay(10000);
-        
-        // Log out user (3rd and final stage)
-        Debug.Log("Logging out user, going to ONBOARDING");
-        CurrentUser = null;
-        UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+        await Task.Run(() => Wait2());
+
+        if (State == AquaMinderState.BOTTLE_OFF)
+        {
+            // Log out user (3rd and final stage)
+            Debug.Log("Logging out user, going to ONBOARDING");
+            CurrentUser = null;
+            UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+        }
     }
 
     private async Task InitializeArduinoCommunication()
@@ -255,7 +263,43 @@ public class GameManager : MonoBehaviour
                 UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
                 return;
             }
+            
+            if (previousUser == null && CurrentUser.uid != null && State == AquaMinderState.BOTTLE_OFF)
+            {
+                UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
+                return;
+            }
+        }
+    }
+    
+    private void Wait1()
+    {
+        var trigger = false;
+        DateTime startTime = DateTime.Now;
+        while ((DateTime.Now - startTime).TotalSeconds < 10 && State == AquaMinderState.BOTTLE_OFF)
+        {
+            if (!trigger)
+            {
+                // Do something here
+                Debug.Log("Wait 1 executed");
+                trigger = true;
+            }
+        }
+    }
 
+    
+    private void Wait2()
+    {
+        var trigger = false;
+        DateTime startTime = DateTime.Now;
+        while ((DateTime.Now - startTime).TotalSeconds < 10 && State == AquaMinderState.BOTTLE_OFF)
+        {
+            if (!trigger)
+            {
+                // Do something here
+                Debug.Log("Wait 2 executed");
+                trigger = true;
+            }
         }
     }
 }
