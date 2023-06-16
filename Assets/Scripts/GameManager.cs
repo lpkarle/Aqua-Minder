@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
 
     async void Start()
     {
+        Debug.Log("Starting AquaMinder");
         //Debug.Log("Get User");
 
         //CurrentUser = PlayerPrefsManager.GetUserByUid("ab8a90b9");
@@ -67,6 +68,10 @@ public class GameManager : MonoBehaviour
             case AquaMinderState.USER_LOGIN:
                 HandleUserLogin();
                 break;
+            
+            case AquaMinderState.WAIT_BOTTLE:
+                HandleWaitBottle();
+                break;
 
             case AquaMinderState.BOTTLE_ON:
                 HandleBottleOn();
@@ -96,42 +101,84 @@ public class GameManager : MonoBehaviour
     private async void HandleUserLogin()
     {
         Debug.Log("Handle USER_LOGIN");
+        await Task.Delay(1000);
+        UpdateAquaMinderState(AquaMinderState.WAIT_BOTTLE);
+    }
+    
+    private async void HandleWaitBottle()
+    {
+        Debug.Log("Handle WAIT_BOTTLE");
+        
         await Task.Delay(5000);
 
-        UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
+        // Check if bottle is on the scale, if not, log out user
+        if (weightArduino > 200)
+        {
+            Debug.Log("Detected Bottle");
+            UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
+        } else
+        {
+            Debug.Log("Detected NO Bottle, logging out user, going to ONBOARDING");
+            CurrentUser = null;
+            UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+        }
     }
-
+    
     private async void HandleBottleOn()
     {
         Debug.Log("Handle BOTTLE_ON");
-
-
+        
         await Task.Delay(2000);
-
-        if (previousUser != null && CurrentUser != null)
+        
+        if (CurrentUser != null)
         {
-            if (previousUser.name == CurrentUser.name)
+            var weightDiff = weightArduino - CurrentUser.mostRecentRawWeight;
+            
+            // If weight is smaller than 200, user removed bottle
+            if (weightArduino < 200) 
             {
-                Debug.Log("Previous == Current");
-
-                CurrentUser.drankWeight = weightBottleOn - weightArduino;
+                Debug.Log("User removed bottle");
+                // User removed bottle
+                UpdateAquaMinderState(AquaMinderState.BOTTLE_OFF);
+            }
+            
+            // Diff weight has to be smaller than negative 10 to be considered as a drink
+            if (weightDiff < -10)
+            {
+                // User drank
+                var absWeightDiff = Mathf.Abs(weightDiff);
+                Debug.Log("User drank: " + absWeightDiff);
+                CurrentUser.drankWeight += absWeightDiff;
+                CurrentUser.mostRecentRawWeight = weightArduino;
+                PlayerPrefsManager.SetUser(CurrentUser);
+            }
+            // Diff weight has to be bigger than 10 to be considered as a refill
+            else
+            if (weightDiff > 10)
+            {
+                Debug.Log("User refilled: " + weightDiff);
+                CurrentUser.mostRecentRawWeight = weightArduino;
                 PlayerPrefsManager.SetUser(CurrentUser);
             }
         }
-
-        previousUser = CurrentUser;
-
-        weightBottleOn = weightArduino;
     }
 
     private async void HandleBottleOff()
     {
         Debug.Log("Handle BOTTLE_OFF");
+        
+        // Wait before reminding user (1st stage)
+        Debug.Log("Wait before reminding user");
+        await Task.Delay(10000);
 
-        await Task.Delay(5000);
-
-        if (CurrentUser == null)
-            UpdateAquaMinderState(AquaMinderState.ONBOARDING);
+        // Wait before logging out user (2nd stage)
+        Debug.Log("Wait before logging out user");
+        await Task.Delay(10000);
+        
+        // Log out user (3rd and final stage)
+        Debug.Log("Logging out user, going to ONBOARDING");
+        CurrentUser = null;
+        UpdateAquaMinderState(AquaMinderState.ONBOARDING);
     }
 
     private async Task InitializeArduinoCommunication()
@@ -179,7 +226,7 @@ public class GameManager : MonoBehaviour
     {
         if (CurrentUser == null)
         {
-            Debug.Log("Current User IS Null");
+            // Debug.Log("Current User IS Null");
 
             if (State == AquaMinderState.BOTTLE_ON)
             {
@@ -189,21 +236,21 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Current User IS_NOT Null");
+            // Debug.Log("Current User IS_NOT Null");
 
             if (State == AquaMinderState.ONBOARDING)
             {
                 UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
                 return;
             }
-
-            if (State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid == previousUser.uid)
+            
+            if (previousUser != null && State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid == previousUser.uid)
             {
                 UpdateAquaMinderState(AquaMinderState.BOTTLE_ON);
                 return;
             }
 
-            if (State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid != previousUser.uid)
+            if (previousUser != null && State == AquaMinderState.BOTTLE_OFF && CurrentUser.uid != previousUser.uid)
             {
                 UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
                 return;
@@ -213,10 +260,14 @@ public class GameManager : MonoBehaviour
     }
 }
 
+
+
+
 public enum AquaMinderState
 {
     ONBOARDING,
     USER_LOGIN,
+    WAIT_BOTTLE,
     BOTTLE_ON,
     BOTTLE_OFF
 }

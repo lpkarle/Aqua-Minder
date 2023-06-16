@@ -68,7 +68,7 @@ public class ArduinoCommunication
         
         var response = serialPort.ReadLine().Trim();
 
-        Debug.Log(response);
+        // Debug.Log(response);
 
         return response;
     }

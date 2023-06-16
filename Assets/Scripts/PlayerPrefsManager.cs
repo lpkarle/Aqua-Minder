@@ -13,9 +13,9 @@ public static class PlayerPrefsManager
 
         var dummyUsers = new User[]
         {
-            new User { name = "Chip 1", uid = "ab8a90b9" },
-            new User { name = "Fabio Chip", uid = "6a575e9" },
-            new User { name = "Fabio Card", uid = "10d57fa2" }
+            new User { name = "Chip 1", uid = "ab8a90b9", bottleTareWeight = 1},
+            new User { name = "Fabio Chip, Bottle", uid = "6a575e9", bottleTareWeight = 240},
+            new User { name = "Fabio Card, Mate", uid = "10d57fa2", bottleTareWeight = 371}
         };
 
         SetUserArray(dummyUsers);
@@ -47,7 +47,7 @@ public static class PlayerPrefsManager
         SetUserArray(users);
     }
 
-    public static void DeleteAllPlayerPrefs()
+    private static void DeleteAllPlayerPrefs()
     {
         PlayerPrefs.DeleteAll();
     }
