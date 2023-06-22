@@ -13,7 +13,7 @@ public class GameManager : MonoBehaviour
 
     public static event Action<AquaMinderState> OnAquaMinderStateChanged;
 
-    private string arduinoPort;
+    [SerializeField] private string arduinoPort;
     [SerializeField] private int arduinoBaudrate;
 
     private ArduinoCommunication arduinoInstance;
