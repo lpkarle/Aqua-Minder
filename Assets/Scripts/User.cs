@@ -8,6 +8,9 @@ public class User
     public float drankWeight = 0;
     public float bottleTareWeight;
     public float mostRecentRawWeight = 0;
+    public float colorRed = 0;
+    public float colorGreen = 0;
+    public float colorBlue = 0;
 }
 
 [System.Serializable]

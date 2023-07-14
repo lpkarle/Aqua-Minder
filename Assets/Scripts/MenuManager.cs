@@ -66,18 +66,14 @@ public class MenuManager : MonoBehaviour
     private void GameManagerOnAquaMinderStateChanged(AquaMinderState state)
     {
         panelOnboarding.SetActive(state == AquaMinderState.ONBOARDING);
-        panelMessage.SetActive(state == AquaMinderState.USER_LOGIN);
+        panelMessage.SetActive(state is AquaMinderState.USER_LOGIN or AquaMinderState.WAIT_BOTTLE);
 
-        switch (state)
-        {
-            case AquaMinderState.USER_LOGIN:
-                ShowWelcomeMessage();
-                break;
-        }
+        if (state is AquaMinderState.USER_LOGIN or AquaMinderState.WAIT_BOTTLE)
+            ShowWelcomeMessage();
     }
 
     private void ShowWelcomeMessage()
     {
-        textWelcome.text = $"Willkommen { GameManager.Instance.CurrentUser.name }\n\nfrohes trinken :)";
+        textWelcome.text = $"Willkommen { GameManager.Instance.CurrentUser.name }\nfrohes trinken :)";
     }
 }

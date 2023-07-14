@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Threading.Tasks;
 using UnityEngine;
 using System.IO.Ports;
@@ -18,6 +17,8 @@ public class GameManager : MonoBehaviour
 
     private ArduinoCommunication arduinoInstance;
 
+    [SerializeField] private Animator sunny;
+
     public User CurrentUser { get; private set; }
     private User previousUser;
     private float humidity;
@@ -26,27 +27,14 @@ public class GameManager : MonoBehaviour
     private float weightBottleOn;
 
     private bool runtime = true;
-
-    private Task task1;
-    private Task task2;
-    private Task task3;
+    
+    private Timer timeToDrink = new(20);
 
     void Awake() => Instance = this;
 
     async void Start()
     {
         Debug.Log("Starting AquaMinder");
-        //Debug.Log("Get User");
-
-        //CurrentUser = PlayerPrefsManager.GetUserByUid("ab8a90b9");
-        //Debug.Log("CurrentUser: " + CurrentUser.name);
-
-        //CurrentUser.drankWeight = 104;
-        //PlayerPrefsManager.SetUser(CurrentUser);
-
-        //var test = PlayerPrefsManager.GetUserByUid("ab8a90b9");
-        //Debug.Log("CurrentUser: " + test.name +  " " + test.drankWeight);
-
 
         UpdateAquaMinderState(AquaMinderState.ONBOARDING);
 
@@ -58,6 +46,14 @@ public class GameManager : MonoBehaviour
     {
         // Only for development
         MenuManager.Instance.UpdateSystemInfoText(CurrentUser, temperature, humidity, weightArduino);
+
+        timeToDrink.Update();
+
+        if (timeToDrink.IsFinished && State == AquaMinderState.BOTTLE_ON)
+        {
+            sunny.SetTrigger("animation_die");
+            timeToDrink.Reset();
+        }
     }
 
     private void UpdateAquaMinderState(AquaMinderState newState)
@@ -101,11 +97,25 @@ public class GameManager : MonoBehaviour
     private void HandleOnboarding()
     {
         Debug.Log("Handle ONBOARDING");
+        
+        UnitManager.Instance.ActivateColorCycle();
+
+        sunny.SetTrigger("animation_onboarding");
     }
 
     private async void HandleUserLogin()
     {
         Debug.Log("Handle USER_LOGIN");
+        
+        UnitManager.Instance.DeactivateColorCycle();
+        UnitManager.Instance.UpdateSunnyColor(new Color(CurrentUser.colorRed, CurrentUser.colorGreen, CurrentUser.colorBlue));
+
+        sunny.SetTrigger("animation_idle");
+        
+        timeToDrink = new Timer(20 * (humidity / 80) * (20 / temperature));
+        Debug.Log("NEW TIME TO DRINK:" + timeToDrink.Duration);
+        timeToDrink.Reset();
+
         await Task.Delay(1000);
         UpdateAquaMinderState(AquaMinderState.WAIT_BOTTLE);
     }
@@ -114,7 +124,7 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Handle WAIT_BOTTLE");
         
-        await Task.Delay(5000);
+        await Task.Delay(1000);
 
         // Check if bottle is on the scale, if not, log out user
         if (weightArduino > 200)
@@ -133,8 +143,12 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Handle BOTTLE_ON");
         
-        await Task.Delay(2000);
+        UnitManager.Instance.DeactivateColorCycle();
+
+        timeToDrink.Start();
         
+        await Task.Delay(5000);
+
         if (CurrentUser != null)
         {
             var weightDiff = weightArduino - CurrentUser.mostRecentRawWeight;
@@ -151,6 +165,10 @@ public class GameManager : MonoBehaviour
             if (weightDiff < -10)
             {
                 // User drank
+                timeToDrink.Reset();
+                timeToDrink.Start();
+                sunny.SetTrigger("animation_revive");
+
                 var absWeightDiff = Mathf.Abs(weightDiff);
                 Debug.Log("User drank: " + absWeightDiff);
                 CurrentUser.drankWeight += absWeightDiff;
@@ -171,20 +189,24 @@ public class GameManager : MonoBehaviour
     private async void HandleBottleOff()
     {
         Debug.Log("Handle BOTTLE_OFF");
-        
+
         // Wait before reminding user (1st stage)
         Debug.Log("Wait before reminding user");
-        await Task.Run(() => Wait1());
+        await Task.Delay(10000);
         
+        UnitManager.Instance.ActivateColorCycle();
+
         // Wait before logging out user (2nd stage)
         Debug.Log("Wait before logging out user");
-        await Task.Run(() => Wait2());
+        await Task.Delay(10000);
 
         if (State == AquaMinderState.BOTTLE_OFF)
         {
             // Log out user (3rd and final stage)
             Debug.Log("Logging out user, going to ONBOARDING");
             CurrentUser = null;
+            sunny.SetTrigger("animation_die_to_onboarding");
+            UnitManager.Instance.ResetSunnyColor();
             UpdateAquaMinderState(AquaMinderState.ONBOARDING);
         }
     }
@@ -268,37 +290,6 @@ public class GameManager : MonoBehaviour
             {
                 UpdateAquaMinderState(AquaMinderState.USER_LOGIN);
                 return;
-            }
-        }
-    }
-    
-    private void Wait1()
-    {
-        var trigger = false;
-        DateTime startTime = DateTime.Now;
-        while ((DateTime.Now - startTime).TotalSeconds < 10 && State == AquaMinderState.BOTTLE_OFF)
-        {
-            if (!trigger)
-            {
-                // Do something here
-                Debug.Log("Wait 1 executed");
-                trigger = true;
-            }
-        }
-    }
-
-    
-    private void Wait2()
-    {
-        var trigger = false;
-        DateTime startTime = DateTime.Now;
-        while ((DateTime.Now - startTime).TotalSeconds < 10 && State == AquaMinderState.BOTTLE_OFF)
-        {
-            if (!trigger)
-            {
-                // Do something here
-                Debug.Log("Wait 2 executed");
-                trigger = true;
             }
         }
     }

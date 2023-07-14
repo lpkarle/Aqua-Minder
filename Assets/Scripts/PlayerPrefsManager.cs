@@ -13,9 +13,9 @@ public static class PlayerPrefsManager
 
         var dummyUsers = new User[]
         {
-            new User { name = "Chip 1", uid = "ab8a90b9", bottleTareWeight = 1},
-            new User { name = "Fabio Chip, Bottle", uid = "6a575e9", bottleTareWeight = 240},
-            new User { name = "Fabio Card, Mate", uid = "10d57fa2", bottleTareWeight = 371}
+            new User { name = "Lukas Chip, Mate", uid = "ab8a90b9", bottleTareWeight = 1, colorRed = 0.0f, colorGreen = 0.0f, colorBlue = 1.0f },
+            new User { name = "Fabio Chip, Bottle", uid = "6a575e9", bottleTareWeight = 240, colorRed = 1.0f, colorGreen = 0.0f, colorBlue = 1.0f },
+            new User { name = "Fabio Card, Mate", uid = "10d57fa2", bottleTareWeight = 371, colorRed = 1.0f, colorGreen = 0.5f, colorBlue = 0.0f }
         };
 
         SetUserArray(dummyUsers);

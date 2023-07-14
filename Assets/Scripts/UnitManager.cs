@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class UnitManager : MonoBehaviour
@@ -7,29 +8,20 @@ public class UnitManager : MonoBehaviour
     [SerializeField]
     private GameObject colorIndicatorCycle;
 
-    [SerializeField]
-    private Material[] indicatorMaterials;
+    [SerializeField] private Material sunnyTopf;
+    private Color sunnyTopfDefaultColor = new(0.9f, 1.0f, 1.0f);
+    
+    [SerializeField] private Material[] indicatorMaterials;
 
     private void Awake() => Instance = this;
 
-    void Start()
-    {
-        colorIndicatorCycle.GetComponent<Renderer>().material = indicatorMaterials[1];
-    }
+    private void Start() => sunnyTopf.color = sunnyTopfDefaultColor;
 
+    public void ActivateColorCycle() => colorIndicatorCycle.SetActive(true);
+    
+    public void DeactivateColorCycle() => colorIndicatorCycle.SetActive(false);
 
-    void Update()
-    {
-            
-    }
-
-    public void UpdateColorIndicator()
-    {
-        // TODO
-    }
-
-    private void ScaleColorIndicatorUpAndDown()
-    {
-
-    }
+    public void UpdateSunnyColor(Color color) => sunnyTopf.color = color;
+    
+    public void ResetSunnyColor() => sunnyTopf.color = sunnyTopfDefaultColor;
 }
