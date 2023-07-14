@@ -31,28 +31,12 @@ Join us on this hydration journey and experience the transformative benefits of 
 
 ## Prerequisites
 
-- [Unity Game Development Kit (GDK)](https://unity.com/de/download): Aqua Minder is built using Unity. (Mehr info)
-- [Visual Studio Code:](https://code.visualstudio.com/download): Node.js v16 or above (Info fehlt)
-- [Blender](https://www.blender.org/download/): Our model
-- MacOS: Our product runs...
+- [Unity Game Development Kit (GDK)](https://unity.com/de/download): Aqua Minder is built using Unity. (2021.3.14f1)
 
-## Installation
-
-1.
-2.
-3.
 
 ## Usage
 
-1. Open the Aqua Minder project in Unity.
-2. Build and run the project on your desired platform.
-3. 
-4. 
-
-## Contributing
-
-Contributions are welcome! If you have any ideas, suggestions, or bug reports, we appreciate any feedback or contributions to make Aqua Minder even better.
-
-## Contact
-
-For any inquiries or further information, please contact the Aqua Minder development team at [email@h-ka.de]
+1. Flash Aquaminder
+2. Connect Aquaminder using serial
+3. Start Aquaminder.app
+4. Enjoy
